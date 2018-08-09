@@ -78,6 +78,7 @@ class SoftwareSerial : public Stream
 {
 private:
   // per object data
+  uint8_t _ss_clear_interrupts_during_tx;
   uint8_t _receivePin;
   uint8_t _receiveBitMask;
   volatile uint8_t *_receivePortRegister;
@@ -119,7 +120,7 @@ public:
   bool isListening() { return this == active_object; }
   bool overflow() { bool ret = _buffer_overflow; _buffer_overflow = false; return ret; }
   int peek();
-
+  
   virtual size_t write(uint8_t byte);
   virtual int read();
   virtual int available();
@@ -129,6 +130,8 @@ public:
 
   // public only for easy access by interrupt handlers
   static inline void handle_interrupt();
+  void clearInterruptsDuringTx(bool val);
+  
 };
 
 // Arduino 0012 workaround

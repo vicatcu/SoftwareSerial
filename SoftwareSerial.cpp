@@ -470,7 +470,8 @@ SoftwareSerial::SoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inv
   _rx_delay_stopbit(0),
   _tx_delay(0),
   _buffer_overflow(false),
-  _inverse_logic(inverse_logic)
+  _inverse_logic(inverse_logic),
+  _ss_clear_interrupts_during_tx(1)
 {
   setTX(transmitPin);
   setRX(receivePin);
@@ -583,7 +584,9 @@ size_t SoftwareSerial::write(uint8_t b)
   }
 
   uint8_t oldSREG = SREG;
-  cli();  // turn off interrupts for a clean txmit
+  if(_ss_clear_interrupts_during_tx){
+    cli();  // turn off interrupts for a clean txmit
+  }
 
   // Write the start bit
   tx_pin_write(_inverse_logic ? HIGH : LOW);
@@ -619,7 +622,10 @@ size_t SoftwareSerial::write(uint8_t b)
     tx_pin_write(HIGH); // restore pin to natural state
   }
 
-  SREG = oldSREG; // turn interrupts back on
+  if(_ss_clear_interrupts_during_tx){
+    SREG = oldSREG; // turn interrupts back on
+  }
+  
   tunedDelay(_tx_delay);
   
   return 1;
@@ -647,6 +653,10 @@ int SoftwareSerial::peek()
 
   // Read from "head"
   return _receive_buffer[_receive_buffer_head];
+}
+
+void SoftwareSerial::clearInterruptsDuringTx(bool val) {
+  _ss_clear_interrupts_during_tx = val ? 1 : 0;
 }
 
 #endif
